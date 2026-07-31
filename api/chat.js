@@ -1,45 +1,64 @@
 export default async function handler(req, res) {
+
   if (req.method !== "POST") {
-    return res.status(405).json({ error: "Method not allowed" });
+    return res.status(405).json({
+      error: "Method not allowed"
+    });
   }
 
   try {
+
     const { message } = req.body;
 
     const response = await fetch(
-      `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${process.env.GEMINI_API_KEY}`,
+      "https://api.groq.com/openai/v1/chat/completions",
       {
         method: "POST",
+
         headers: {
           "Content-Type": "application/json",
+          "Authorization": "Bearer " + process.env.GROQ_API_KEY
         },
+
         body: JSON.stringify({
-          contents: [
+
+          model: "llama-3.1-8b-instant",
+
+          messages: [
             {
-              parts: [
-                {
-                  text: message
-                }
-              ]
+              role: "system",
+              content: "Kamu adalah asisten AI yang ramah dan selalu menjawab dalam bahasa Indonesia."
+            },
+            {
+              role: "user",
+              content: message
             }
           ]
-        }),
+
+        })
       }
     );
 
+
     const data = await response.json();
 
+
     const reply =
-      data.candidates?.[0]?.content?.parts?.[0]?.text ||
-      "Maaf, AI tidak memberikan jawaban.";
+      data.choices?.[0]?.message?.content ||
+      "AI tidak memberikan jawaban.";
+
 
     res.status(200).json({
       reply: reply
     });
 
+
   } catch (error) {
+
     res.status(500).json({
-      error: "Gagal terhubung ke Gemini"
+      error: "Gagal terhubung ke Groq"
     });
+
   }
+
 }
