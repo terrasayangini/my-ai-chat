@@ -128,7 +128,8 @@ Always prioritize the user's latest message.
 
 
     const data = await response.json();
-
+console.log(response.status);
+console.log(data);
 
     const reply =
       data.choices?.[0]?.message?.content ||
