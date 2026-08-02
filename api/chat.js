@@ -8,26 +8,14 @@ export default async function handler(req, res) {
 
   try {
 
-    const { message } = req.body;
+    const { message, history } = req.body;
 
-    const response = await fetch(
-      "https://api.groq.com/openai/v1/chat/completions",
+
+    const messages = [
+
       {
-        method: "POST",
-
-        headers: {
-          "Content-Type": "application/json",
-          "Authorization": "Bearer " + process.env.GROQ_API_KEY
-        },
-
-        body: JSON.stringify({
-
-          model: "llama-3.3-70b-versatile",
-
-          messages: [
-            {
-              role: "system",
-              content: `
+        role: "system",
+        content: `
 You are Bearly AI Assistant 🧸.
 
 You are a friendly, professional, and intelligent AI assistant.
@@ -55,28 +43,81 @@ YOUR BEHAVIOR:
 - Correct grammar politely when asked.
 - Give examples whenever useful.
 
-Always prioritize the user's latest message to determine the response language.
+MEMORY RULE:
+- Use previous conversation context when provided.
+- Remember only the latest 2 conversation exchanges.
+- Do not pretend to remember information that is not in the context.
+
+ANSWER LENGTH:
+- Keep every answer concise.
+- Maximum 200 words.
+- Avoid unnecessary long explanations.
+
+Always prioritize the user's latest message.
 `
-            },
-            {
-              role: "user",
-              content: message
-            }
-          ]
+      }
+
+    ];
+
+
+    // masukkan memory percakapan terakhir
+    if (Array.isArray(history)) {
+
+      history.slice(-4).forEach(item => {
+
+        messages.push({
+          role: item.role,
+          content: item.content
+        });
+
+      });
+
+    }
+
+
+    // pesan terbaru user
+    messages.push({
+      role: "user",
+      content: message
+    });
+
+
+
+    const response = await fetch(
+      "https://api.groq.com/openai/v1/chat/completions",
+      {
+        method: "POST",
+
+        headers: {
+          "Content-Type": "application/json",
+          "Authorization": "Bearer " + process.env.GROQ_API_KEY
+        },
+
+        body: JSON.stringify({
+
+          model: "llama-3.3-70b-versatile",
+
+          messages: messages,
+
+          temperature: 0.7
 
         })
       }
     );
 
+
     const data = await response.json();
+
 
     const reply =
       data.choices?.[0]?.message?.content ||
       "Sorry, I couldn't generate a response.";
 
+
     res.status(200).json({
       reply: reply
     });
+
 
   } catch (error) {
 
