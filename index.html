@@ -85,6 +85,7 @@ button:hover{
     background:#0b5ed7;
 }
 </style>
+
 </head>
 
 <body>
@@ -97,55 +98,94 @@ AI Assistant 🌼
 </div>
 
 <div class="messages" id="messages">
+
 <div class="msg bot">
 Halo 👋 Namaku Bearly..!
-    Buku apa yang pernah kamu baca?
-    Ayo kita diskusikan. 
-    Aku juga bisa kasih Saran atau Tips buat kamu.
+Buku apa yang pernah kamu baca?
+Ayo kita diskusikan.
+Aku juga bisa kasih Saran atau Tips buat kamu.
 </div>
+
 </div>
+
 
 <div class="footer">
-<input id="text" placeholder="Tulis pesan..." onkeypress="if(event.key==='Enter')send()">
+
+<input 
+id="text" 
+placeholder="Tulis pesan..." 
+onkeypress="if(event.key==='Enter')send()">
+
 <button onclick="send()">Kirim</button>
-</div>
 
 </div>
+
+
+</div>
+
 
 <script>
 
 const messages = document.getElementById("messages");
 
+
+// memory percakapan sementara
+let chatHistory = [];
+
+
 function addMessage(text,type){
 
     let div=document.createElement("div");
+
     div.className="msg "+type;
+
     div.innerHTML=text;
 
     messages.appendChild(div);
+
     messages.scrollTop=messages.scrollHeight;
 
 }
 
+
+
 async function send(){
 
     let input=document.getElementById("text");
+
     let text=input.value.trim();
+
 
     if(text=="") return;
 
+
     addMessage(text,"user");
+
     input.value="";
 
+
+    // simpan pesan user
+    chatHistory.push({
+        role:"user",
+        content:text
+    });
+
+
+
     let loading=document.createElement("div");
+
     loading.className="msg bot";
+
     loading.innerHTML="Mengetik...";
 
     messages.appendChild(loading);
+
     messages.scrollTop=messages.scrollHeight;
 
 
+
     try{
+
 
         const response = await fetch("/api/chat",{
 
@@ -155,29 +195,67 @@ async function send(){
                 "Content-Type":"application/json"
             },
 
+
             body:JSON.stringify({
-                message:text
+
+                message:text,
+
+                // kirim 2 percakapan terakhir
+                history:chatHistory.slice(-4)
+
             })
 
         });
 
 
+
         const data = await response.json();
 
-        loading.innerHTML = data.reply || "AI tidak menjawab.";
+
+
+        let reply = data.reply || "AI tidak menjawab.";
+
+
+        loading.innerHTML = reply;
+
+
+
+        // simpan jawaban AI
+        chatHistory.push({
+
+            role:"assistant",
+
+            content:reply
+
+        });
+
+
+
+        // jaga hanya 2 percakapan
+        if(chatHistory.length > 4){
+
+            chatHistory = chatHistory.slice(-4);
+
+        }
+
+
 
     }catch(err){
+
 
         loading.innerHTML="❌ Gagal terhubung ke AI.";
 
         console.log(err);
 
+
     }
+
 
 }
 
 
 </script>
+
 
 </body>
 </html>
