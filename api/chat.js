@@ -35,7 +35,7 @@ Conversation:
     prompt += `user: ${message}`;
 
     const response = await fetch(
-      `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${process.env.Gemini_API_Key_4}`,
+      `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${process.env.GEMINI_API_KEY0}`,
       {
         method: "POST",
         headers: {
