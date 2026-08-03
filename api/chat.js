@@ -35,22 +35,23 @@ Conversation:
     prompt += `user: ${message}`;
 
     const response = await fetch(
-      `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${process.env.GEMINI_API_KEY0}`,
+      "https://api.groq.com/openai/v1/chat/completions",
       {
         method: "POST",
         headers: {
-          "Content-Type": "application/json"
+          "Content-Type": "application/json",
+          "Authorization": `Bearer ${process.env.GROQ_API_KEY}`
         },
         body: JSON.stringify({
-          contents: [
+          model: "llama-3.3-70b-versatile",
+          messages: [
             {
-              parts: [
-                {
-                  text: prompt
-                }
-              ]
+              role: "user",
+              content: prompt
             }
-          ]
+          ],
+          temperature: 0.7,
+          max_tokens: 500
         })
       }
     );
@@ -60,7 +61,7 @@ Conversation:
     console.log(data);
 
     const reply =
-      data.candidates?.[0]?.content?.parts?.[0]?.text ||
+      data.choices?.[0]?.message?.content ||
       "Sorry, I couldn't generate a response.";
 
     res.status(200).json({
@@ -72,7 +73,7 @@ Conversation:
     console.error(err);
 
     res.status(500).json({
-      error: "Failed to connect to Gemini."
+      error: "Failed to connect to Groq."
     });
 
   }
